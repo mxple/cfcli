@@ -1,3 +1,7 @@
+pub mod utils;
+
+use utils::*;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -5,36 +9,42 @@ use clap::{Parser, Subcommand};
 // #[clap(disable_help_flag = true)]
 struct Cli {
     #[command(subcommand)]
-    name: Commands,
+    command: Commands,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 enum Commands {
     // "clones" a problem or set of problems (contest)
+    #[command(arg_required_else_help = true)]
     Parse {
-        remote: String,
+        remote: ContestOrProblem,
     },
     // submits a specified problem or current problem
+    #[command(arg_required_else_help = true)]
     Submit {
-
+        problem: Problem,
     },
     Version,
 }
 
-#[derive(Debug)]
-struct Problem {
-    contest_id: u32,
-    problem_id: u32,
-}
-
-#[derive(Debug)]
-struct Contest {
-    problems: Vec<Problem>,
-}
-
 fn main() {
-    let cli = Cli::parse();
-  
-    println!("Hello, {:?}!", cli);
-}
+    let args = Cli::parse();
+    dbg!(&args);
 
+    match args.command {
+        Commands::Parse { remote } => match remote {
+            ContestOrProblem::Contest(contest) => {
+                todo!();
+            }
+            ContestOrProblem::Problem(problem) => {
+                todo!();
+            }
+        },
+        Commands::Submit { problem } => {
+            todo!();
+        }
+        Commands::Version => {
+            println!("1.0");
+        }
+    }
+}
