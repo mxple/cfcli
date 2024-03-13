@@ -1,5 +1,7 @@
-fn main() {
-    let cmd = std::env::args().nth(1).expect("no command given");
+mod auth;
+mod util;
 
-    println!("cmd: {:?}", cmd);
+#[tokio::main]
+async fn main() {
+    let _ = auth::login().await;
 }
