@@ -7,12 +7,12 @@ use crate::{Contest, Problem};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    cf_dir: String,
-    workspace_dir: String,
-    solution_filename: String,
-    default_lang: usize,
-    workspace_creation_cmd: String,
-    open_cmd: String,
+    pub cf_dir: String,
+    pub workspace_dir: String,
+    pub solution_filename: String,
+    pub default_lang: usize,
+    pub workspace_creation_cmd: String,
+    pub open_cmd: String,
 }
 
 impl Config {
@@ -109,8 +109,8 @@ pub fn try_write_config(config: &Config) -> Result<(), std::io::Error> {
 // contest, current problem, and similar
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppState {
-    current_contest: Option<Contest>,
-    current_problem: Option<Problem>,
+    pub current_contest: Option<Contest>,
+    pub current_problem: Option<Problem>,
 }
 
 impl AppState {
