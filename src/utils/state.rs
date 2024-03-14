@@ -65,7 +65,7 @@ pub fn map_id_to_lang(id: usize) -> Result<String, Box<dyn std::error::Error>> {
 }
 
 #[derive(Debug)]
-enum ReadError {
+pub enum ReadError {
     IoError(std::io::Error),
     InvalidConfig(toml::de::Error),
 }
