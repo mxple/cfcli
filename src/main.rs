@@ -1,4 +1,5 @@
-pub mod utils;
+mod auth;
+mod utils;
 
 use utils::*;
 
