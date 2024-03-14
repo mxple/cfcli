@@ -1,6 +1,11 @@
 use rand::Rng;
 use std::str::FromStr;
 
+
+use serde::{Deserialize, Serialize};
+
+pub mod state;
+
 const ALPHA_NUMERIC: &str = "abcdefghijklmnopqrstuvwxyz0123456789";
 
 pub fn random_string(n: usize) -> String {
@@ -20,13 +25,13 @@ pub enum ContestOrProblem {
     Problem(Problem),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Problem {
     pub contest_id: u32,
     pub problem_id: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contest {
     pub contest_id: u32,
 }
