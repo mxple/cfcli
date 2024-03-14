@@ -1,8 +1,10 @@
 use crate::utils::*;
-use scraper::{Html, Selector};
 use futures::future::join_all;
-use serde::{Serialize, Deserialize};
-use std::fs;
+use scraper::{Html, Selector};
+use serde::{Deserialize, Serialize};
+use std::{fs, io::Read, path::PathBuf, process::Command};
+
+use self::state::Config;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SingleTest {
@@ -16,18 +18,18 @@ pub struct TestCases {
     tests: Vec<SingleTest>,
 }
 
-pub async fn parse(cp: &ContestOrProblem) {
+pub async fn parse(cp: &ContestOrProblem, config: &Config) {
     match cp {
         ContestOrProblem::Contest(contest) => {
-            parse_contest(&contest).await;
+            parse_contest(&contest, config).await;
         }
         ContestOrProblem::Problem(problem) => {
-            parse_problem(&problem).await;
+            parse_problem(&problem, config).await;
         }
     };
 }
 
-async fn parse_contest(c: &Contest) {
+async fn parse_contest(c: &Contest, config: &Config) {
     // Query contest for how many problems
     let url = format!("https://codeforces.com/contest/{}", c.contest_id);
     let html = reqwest::get(&url)
@@ -57,13 +59,13 @@ async fn parse_contest(c: &Contest) {
             contest_id: c.contest_id,
             problem_id: pid.to_string(),
         };
-        futures.push(async move { parse_problem(&p).await });
+        futures.push(async move { parse_problem(&p, config).await });
     }
 
     join_all(futures).await;
 }
 
-async fn parse_problem(p: &Problem) {
+async fn parse_problem(p: &Problem, config: &Config) {
     let url = format!(
         "https://codeforces.com/contest/{}/problem/{}",
         p.contest_id, p.problem_id
@@ -103,10 +105,59 @@ async fn parse_problem(p: &Problem) {
     // Turn parsed problem into folder/file
     let json_data = serde_json::to_string(&test_cases).unwrap();
 
-    let cf_dir = "./";
-    std::env::set_current_dir(cf_dir).expect("Unable to change to directory");
+    // Write to cache
+    let mut cache_path = PathBuf::from(&config.cf_dir);
 
-    fs::create_dir_all(p.contest_id.to_string()+&p.problem_id).expect("Unable to make directory");
+    cache_path.push(".cfcli");
+    cache_path.push(p.contest_id.to_string() + &p.problem_id);
 
-    fs::write("tests.json", json_data).expect("Unable to write test cases to file");
+    fs::create_dir_all(&cache_path).expect("Unable to make directory");
+
+    cache_path.push("tests.json");
+    fs::write(cache_path, json_data).expect("Unable to write test cases to file");
+
+    // Create workspace files
+    let mut workspace_path = PathBuf::from(&config.cf_dir);
+
+    // Replace placeholders with actual values
+    workspace_path.push(
+        &config
+            .workspace_dir
+            .replace("{%contest_id%}", &p.contest_id.to_string())
+            .replace("{%problem_id%}", &p.problem_id),
+    );
+
+    fs::create_dir_all(&workspace_path).expect("Unable to make directory");
+    std::env::set_current_dir(&workspace_path).expect("Failed to change to workspace directory");
+
+    Command::new("bash")
+        .arg("-c")
+        .arg(&config.workspace_creation_cmd)
+        .output()
+        .expect("Failed to execute workspace creation command");
+
+    // Pull template file
+    let mut template_path = PathBuf::from(&config.cf_dir);
+    template_path.push(".cfcli/templates/");
+    // hard-coded cpp for now
+    template_path.push("template.cpp");
+
+    let mut template_file = fs::File::open(&template_path).expect("Could not open code template");
+    let mut template_buffer = String::new();
+    template_file
+        .read_to_string(&mut template_buffer)
+        .expect("Error reading template file");
+
+    // replace time date stuff idk
+    // template_buffer.replace();
+
+    let mut solution_path = PathBuf::from(workspace_path);
+    let mut solution_filename = config
+            .solution_filename
+            .clone()
+            .replace("{%contest_id%}", &p.contest_id.to_string())
+            .replace("{%problem_id%}", &p.problem_id);
+    solution_filename.push_str(".cpp");
+    solution_path.push(solution_filename);
+    fs::write(solution_path, template_buffer).expect("Unable to write file");
 }

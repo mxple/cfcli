@@ -1,8 +1,9 @@
+pub mod commands;
 pub mod utils;
 
-use utils::*;
-
 use clap::{Parser, Subcommand};
+use commands::*;
+use utils::*;
 
 #[derive(Parser, Debug)]
 #[command(name = "cfcli", version = "1.0")]
@@ -27,19 +28,18 @@ enum Commands {
     Version,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args = Cli::parse();
-    dbg!(&args);
+    state::try_write_config(&state::Config::new());
+
+    let config = state::try_read_config().unwrap();
+    dbg!(&config);
 
     match args.command {
-        Commands::Parse { remote } => match remote {
-            ContestOrProblem::Contest(contest) => {
-                todo!();
-            }
-            ContestOrProblem::Problem(problem) => {
-                todo!();
-            }
-        },
+        Commands::Parse { remote } => {
+            parse::parse(&remote, &config).await;
+        }
         Commands::Submit { problem } => {
             todo!();
         }
