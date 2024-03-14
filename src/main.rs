@@ -1,5 +1,5 @@
 mod auth;
-mod util;
+mod utils;
 
 #[tokio::main]
 async fn main() {

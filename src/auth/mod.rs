@@ -2,10 +2,10 @@ use scraper::Html;
 use colored::Colorize;
 use regex::Regex;
 use rpassword::read_password;
-use crate::util;
+use crate::utils;
 
 fn get_ftaa() -> String {
-    util::random_string(18)
+    utils::random_string(18)
 }
 
 fn get_bfaa() -> String {
