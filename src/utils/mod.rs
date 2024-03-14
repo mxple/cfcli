@@ -1,8 +1,23 @@
+use rand::Rng;
 use std::str::FromStr;
+
 
 use serde::{Deserialize, Serialize};
 
 pub mod state;
+
+const ALPHA_NUMERIC: &str = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+pub fn random_string(n: usize) -> String {
+    let mut rng = rand::thread_rng();
+    let s: String = (0..n)
+        .map(|_| {
+            let i = rng.gen_range(0..ALPHA_NUMERIC.len());
+            ALPHA_NUMERIC.chars().nth(i).unwrap()
+        })
+        .collect();
+    s
+}
 
 #[derive(Debug, Clone)]
 pub enum ContestOrProblem {
